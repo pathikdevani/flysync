@@ -51,4 +51,4 @@ build this project flow same ``flysync-nw`` steps.
 ![img](showcase/3.png)
 ![img](showcase/4.png)
 ![img](showcase/5.png)
-![img](showcase/6png)
+![img](showcase/6.png)
