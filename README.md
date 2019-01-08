@@ -1,4 +1,4 @@
-# Flysync - The Android PC Suite  (B.E Final year project 2015-16 | Not maintained any more)
+# Flysync - The Android PC Suite
 
 So in our project we tried to make the perfect android pc suite called
 Flysync which will provide offline facility. Our Pc suite will also provide cross
