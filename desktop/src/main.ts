@@ -1,44 +1,82 @@
-import { app, BrowserWindow } from "electron";
-import * as path from "path";
+'use strict';
+import * as path from 'path';
+import {app, BrowserWindow} from 'electron';
+/// const {autoUpdater} = require('electron-updater');
+import {is} from 'electron-util';
+import * as unhandled from 'electron-unhandled';
+import * as debug from 'electron-debug';
 
-function createWindow() {
-  // Create the browser window.
-  const mainWindow = new BrowserWindow({
-    height: 600,
-    webPreferences: {
-      preload: path.join(__dirname, "preload.js"),
-    },
-    width: 800,
-  });
+unhandled();
+debug();
 
-  // and load the index.html of the app.
-  mainWindow.loadFile(path.join(__dirname, "../index.html"));
+// Note: Must match `build.appId` in package.json
+app.setAppUserModelId('com.company.AppName');
 
-  // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+// Uncomment this before publishing your first version.
+// It's commented out as it throws an error if there are no published versions.
+// if (!is.development) {
+// 	const FOUR_HOURS = 1000 * 60 * 60 * 4;
+// 	setInterval(() => {
+// 		autoUpdater.checkForUpdates();
+// 	}, FOUR_HOURS);
+//
+// 	autoUpdater.checkForUpdates();
+// }
+
+// Prevent window from being garbage collected
+let mainWindow: BrowserWindow;
+
+const createMainWindow = async () => {
+	const win = new BrowserWindow({
+		title: app.name,
+		show: false,
+		width: 600,
+		height: 400
+	});
+
+	win.on('ready-to-show', () => {
+		win.show();
+	});
+
+	win.on('closed', () => {
+		// Dereference the window
+		// For multiple windows store them in an array
+		mainWindow = undefined;
+	});
+
+	await win.loadFile(path.join(__dirname, '../index.html'));
+
+	return win;
+};
+
+// Prevent multiple instances of the app
+if (!app.requestSingleInstanceLock()) {
+	app.quit();
 }
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
-app.on("ready", () => {
-  createWindow();
+app.on('second-instance', () => {
+	if (mainWindow) {
+		if (mainWindow.isMinimized()) {
+			mainWindow.restore();
+		}
 
-  app.on("activate", function () {
-    // On macOS it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
-  });
+		mainWindow.show();
+	}
 });
 
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
-app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") {
-    app.quit();
-  }
+app.on('window-all-closed', () => {
+	if (!is.macos) {
+		app.quit();
+	}
 });
 
-// In this file you can include the rest of your app"s specific main process
-// code. You can also put them in separate files and require them here.
+app.on('activate', async () => {
+	if (!mainWindow) {
+		mainWindow = await createMainWindow();
+	}
+});
+
+(async () => {
+	await app.whenReady();
+	mainWindow = await createMainWindow();
+})();
